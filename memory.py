@@ -1,7 +1,7 @@
 from tkinter.messagebox import QUESTION
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLayout
-from PyQt5.QtWidgets import QHBoxLayout, QRadioButton, QGroupBox, QButtonGroup
+from PyQt5.QtWidgets import QHBoxLayout, QRadioButton, QGroupBox, QButtonGroup, QMessageBox
 import sys
 from random import shuffle
 
@@ -25,12 +25,22 @@ radio_group.addButton(rbtn_2)
 radio_group.addButton(rbtn_3)
 radio_group.addButton(rbtn_4)
 
+def end_results():
+    result = round(current_score / total * 100, 2)
+    msg = QMessageBox()
+    msg.setText('Процент правильных ответов:' + str(result) + '%')
+    msg.exec()
 
 def show_question():
+    if question_index == len(question_list):
+        end_results()
+        return
+    global total
     grpbox_answers.show()
     grpbox_result.hide()
+    total += 1
+    ask(question_list[question_index])
     btn_ok.setText('Ответить')
-    btn_ok.clicked.connect(show_result)
     radio_group.setExclusive(False)
     rbtn_1.setChecked(False)
     rbtn_2.setChecked(False)
@@ -40,11 +50,64 @@ def show_question():
 
 
 def show_result():
+    global question_index
+    question_index += 1
     check_answer()
     grpbox_answers.hide()
     grpbox_result.show()
     btn_ok.setText('Следующий вопрос')
-    btn_ok.clicked.connect(show_question)
+    
+
+def button_action():
+    if btn_ok.text() == 'Ответить':
+        show_result()
+    else:
+        show_question()
+
+def ask(q):
+    lbl_question.setText(q.question)
+    shuffle(answers)
+    answers[0].setText(q.right_answer)
+    answers[1].setText(q.wrong1)
+    answers[2].setText(q.wrong2)
+    answers[3].setText(q.wrong3)
+
+def check_answer():
+    global current_score
+    if answers[0].isChecked():
+        lbl_right_answer.setText('Поздравляем! Вы выбрали правильный ответ!')
+        grpbox_result.setStyleSheet('QGroupBox { border: 2px solid #69f369; border-radius: 8%; }')
+        current_score += 1
+    else:
+        lbl_right_answer.setText('Неверный ответ\nПравильный ответ: ' + answers[0].text())
+        grpbox_result.setStyleSheet('QGroupBox { border: 2px solid #ee4433; border-radius: 8%; }')
+
+class Question():
+    def __init__(self, question, right_answer, wrong1, wrong2, wrong3):
+        self.question = question
+        self.right_answer = right_answer
+        self.wrong1 = wrong1
+        self.wrong2 = wrong2
+        self.wrong3 = wrong3
+
+question_list = [
+    Question('Вопрос номер 1', 'правuльный' , 'непрвавильный', 'неправильно', 'правильно'),
+    Question('Сколько дней в году?', '365', '1000',  '?', '1'),
+    Question('Сколько костей в теле человека?', '206', '205', '201', '209'),
+    Question('Сколько сердц у осьминога?', '3', '2', '1', '4'),
+    Question('Сколько дней в февроле в весокосный год?', '29', '28', '30', '31'),
+    Question('Сколько градусов в круге?', '360', '180', '150', '90'),
+    Question('Сколько клавишь у стандартного современного пианино?','88', '87', '86', '89'),
+    Question('Сколько ребер в теле человека?','24', '16', '19', '29'),
+    Question('Сколько колец на олимпийском флаге?', '5', '7', '4', '6')
+]
+
+question_index = 0
+current_score = 0
+total = 1
+
+def next_question():
+    global question_index
 
 
 btn_ok.setStyleSheet('''
@@ -58,7 +121,7 @@ window.setStyleSheet('''
     font-size: 16px;
 ''')
 
-btn_ok.clicked.connect(show_result)
+btn_ok.clicked.connect(button_action)
 
 grpbox_result = QGroupBox('Результат теста')
 lbl_right_answer = QLabel('Правильный ответ: 2313')
@@ -98,44 +161,15 @@ v_line_main.addStretch(1)
 v_line_main.addLayout(h_line_main_3, stretch=1)
 v_line_main.addStretch(1)
 
-class Question():
-    def __init__(self, question, right_answer, wrong1, wrong2, wrong3):
-        self.question = question
-        self.right_answer = right_answer
-        self.wrong1 = wrong1
-        self.wrong2 = wrong2
-        self.wrong3 = wrong3
 
-question_list = [
-    Question('Вопрос номер 1', 'правuльный' , 'непрвавильный', 'неправильно', 'правильно'),
-    Question('Сколько дней в году?', '1', '1000',  '?', '365'),
-    Question('Сколько костей в теле человека?', '206', '205', '201', '209')
-    Question('Сколько сердц у осьминога?', '1', '2, '3, '4)
-    Question('Сколько дней в февроле в весокосный год?', '28', '29', '30', '31')
-    Question('Сколько градусов в круге?', '360', '180', '150', '90')
-    Question('Сколько клавишь у стандартного современного пианино?','86', '87', '88', 89')
-    Question('Сколько ребер в теле человека?','16', '24', '19', '29')
-    Question('Сколько колец на олимпийском флаге?', '5', '7', '4', '6')
-]
+
+
 
 answers = [rbtn_1, rbtn_2, rbtn_3, rbtn_4]
-def ask(q):
-    lbl_question.setText(q.question)
-    shuffle(answers)
-    answers[0].setText(q.right_answer)
-    answers[1].setText(q.wrong1)
-    answers[2].setText(q.wrong2)
-    answers[3].setText(q.wrong3)
 
-def check_answer():
-    if answers[0].isChecked():
-        lbl_right_answer.setText('Поздравляем! Вы выбрали правильный ответ!')
-        grpbox_result.setStyleSheet('QGroupBox { border: 2px solid #69f369; border-radius: 8%; }')
-    else:
-        lbl_right_answer.setText('Неверный ответ\nПравильный ответ: ' + answers[0].text())
-        grpbox_result.setStyleSheet('QGroupBox { border: 2px solid #ee4433; border-radius: 8%; }')
 
 ask(question_list[0])
+question_index = 0
 
 
 
